@@ -1,0 +1,39 @@
+name: Build and Release Chrome Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Create zip file
+        run: |
+          mkdir -p release
+          zip -r release/chrome-gemini-ai-extension.zip build/chrome
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/chrome-gemini-ai-extension.zip
+          tag_name: v${{ env.VERSION_NAME }}
+          release_name: Release v${{ env.VERSION_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
