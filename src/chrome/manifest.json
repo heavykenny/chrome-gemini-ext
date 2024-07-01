@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Gemini AI - Chrome In-built Offline AI Assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This extension helps you interact with the Gemini AI (nano) in-built with Chrome. Works offline and is a great tool for productivity",
   "permissions": [
     "storage"
