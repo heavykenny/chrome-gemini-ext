@@ -4,37 +4,41 @@ let asking = false;
 
 function createNewChat() {
     currentChatId = 'chat_' + Date.now();
-    localStorage.setItem('currentChatId', currentChatId);
-    document.getElementById("chat-container").innerHTML = '';
-    document.getElementById("ask-question").value = '';
-    updateChatHistory();
+    chrome.storage.local.set({ currentChatId }, () => {
+        document.getElementById("chat-container").innerHTML = '';
+        document.getElementById("ask-question").value = '';
+        updateChatHistory();
+    });
 }
 
 function updateChatHistory() {
     const historyContainer = document.getElementById("chat-history");
     historyContainer.innerHTML = '';
-    Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('chat_')) {
-            const chat = JSON.parse(localStorage.getItem(key));
-            const lastMessage = chat.length > 0 ? chat[chat.length - 1].message : '';
-            const chatPreview = lastMessage.substring(0, 30) + (lastMessage.length > 30 ? '...' : '');
-            const chatItem = document.createElement('div');
-            chatItem.className = 'flex justify-between items-center p-2 hover:bg-gray-200 cursor-pointer';
-            chatItem.innerHTML = `
-                <span onclick="loadChat('${key}')">${chatPreview || 'Empty chat'}</span>
-                <button class="delete-chat text-red-500 hover:text-red-700" data-chat-id="${key}">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            historyContainer.appendChild(chatItem);
-        }
-    });
 
-    // Add event listeners for delete buttons
-    document.querySelectorAll('.delete-chat').forEach(button => {
-        button.addEventListener('click', (event) => {
-            event.stopPropagation();
-            deleteChat(event.target.closest('button').getAttribute('data-chat-id'));
+    chrome.storage.local.get(null, (items) => {
+        Object.keys(items).forEach(key => {
+            if (key.startsWith('chat_')) {
+                const chat = items[key];
+                const lastMessage = chat.length > 0 ? chat[chat.length - 1].message : '';
+                const chatPreview = lastMessage.substring(0, 30) + (lastMessage.length > 30 ? '...' : '');
+                const chatItem = document.createElement('div');
+                chatItem.className = 'flex justify-between items-center p-2 hover:bg-gray-200 cursor-pointer';
+                chatItem.innerHTML = `
+                    <span onclick="loadChat('${key}')">${chatPreview || 'Empty chat'}</span>
+                    <button class="delete-chat text-red-500 hover:text-red-700" data-chat-id="${key}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                historyContainer.appendChild(chatItem);
+            }
+        });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-chat').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                deleteChat(event.target.closest('button').getAttribute('data-chat-id'));
+            });
         });
     });
 }
@@ -61,40 +65,44 @@ function createChatMessage(sender, message) {
     return messageDiv;
 }
 
-// Update the addMessageToChat function to save AI messages as well
 function addMessageToChat(sender, message) {
     const chatContainer = document.getElementById("chat-container");
     chatContainer.appendChild(createChatMessage(sender, message));
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
     // Save to local storage
-    const chat = JSON.parse(localStorage.getItem(currentChatId) || '[]');
-    chat.push({sender, message});
-    localStorage.setItem(currentChatId, JSON.stringify(chat));
-    updateChatHistory();
+    chrome.storage.local.get([currentChatId], (result) => {
+        const chat = result[currentChatId] || [];
+        chat.push({ sender, message });
+        chrome.storage.local.set({ [currentChatId]: chat }, updateChatHistory);
+    });
 }
 
 function loadChat(chatId) {
     currentChatId = chatId;
     const chatContainer = document.getElementById("chat-container");
     chatContainer.innerHTML = '';
-    const chat = JSON.parse(localStorage.getItem(chatId) || '[]');
-    chat.forEach(msg => chatContainer.appendChild(createChatMessage(msg.sender, msg.message)));
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    chrome.storage.local.get([chatId], (result) => {
+        const chat = result[chatId] || [];
+        chat.forEach(msg => chatContainer.appendChild(createChatMessage(msg.sender, msg.message)));
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
 }
 
 function deleteChat(chatId) {
-    localStorage.removeItem(chatId);
-    updateChatHistory();
-    if (currentChatId === chatId) {
-        createNewChat();
-    }
+    chrome.storage.local.remove(chatId, () => {
+        updateChatHistory();
+        if (currentChatId === chatId) {
+            createNewChat();
+        }
+    });
 }
 
 function clearAllChats() {
-    localStorage.clear();
-    updateChatHistory();
-    createNewChat();
+    chrome.storage.local.clear(() => {
+        updateChatHistory();
+        createNewChat();
+    });
 }
 
 function toggleChatHistory() {
@@ -137,10 +145,11 @@ async function ask() {
         }
 
         // Update the message in local storage without adding a new message to the chat
-        const chat = JSON.parse(localStorage.getItem(currentChatId) || '[]');
-        chat.push({sender: 'ai', message: fullResponse});
-        localStorage.setItem(currentChatId, JSON.stringify(chat));
-        updateChatHistory();
+        chrome.storage.local.get([currentChatId], (result) => {
+            const chat = result[currentChatId] || [];
+            chat.push({ sender: 'ai', message: fullResponse });
+            chrome.storage.local.set({ [currentChatId]: chat }, updateChatHistory);
+        });
 
     } catch (err) {
         setError(err.message);
@@ -179,15 +188,17 @@ window.addEventListener("load", async function () {
             }
         });
 
-        currentChatId = localStorage.getItem('currentChatId');
-        if (!currentChatId) {
-            createNewChat();
-        } else {
-            loadChat(currentChatId);
-        }
+        chrome.storage.local.get('currentChatId', (result) => {
+            currentChatId = result.currentChatId;
+            if (!currentChatId) {
+                createNewChat();
+            } else {
+                loadChat(currentChatId);
+            }
 
-        updateChatHistory();
-        document.body.setAttribute("data-ready", "true");
+            updateChatHistory();
+            document.body.setAttribute("data-ready", "true");
+        });
     } catch (err) {
         console.error(err);
         setError(err.message);
