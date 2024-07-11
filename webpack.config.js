@@ -7,8 +7,6 @@ module.exports = (env, argv) => {
     return {
         entry: {
             background: './src/common/background.js',
-            popup: './src/common/popup.js',
-            options: './src/common/options.js',
             sidepanel: './src/common/sidepanel.js',
             styles: './src/common/styles/tailwind.css',
         },
@@ -23,8 +21,6 @@ module.exports = (env, argv) => {
         plugins: [new CopyWebpackPlugin({
             patterns: [
                 {from: `src/${browser}/manifest.json`, to: 'manifest.json'},
-                {from: 'src/popup.html', to: 'popup.html'},
-                {from: 'src/options.html', to: 'options.html'},
                 {from: 'src/sidepanel.html', to: 'sidepanel.html'},
                 {from: 'src/common/icons', to: 'icons'},
                 {from: 'src/common/styles', to: 'styles'}]
