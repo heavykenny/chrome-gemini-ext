@@ -21,7 +21,7 @@ The extension icon is based on the [UI Icon](https://www.flaticon.com/free-icon/
 - Chat History: View and interact with previous conversations or Delete them.
 - Open Source: Transparent codebase that welcomes community contributions and improvements.
 
-[![Watch the video](https://img.youtube.com/vi/jH2gr9cPjWI/maxresdefault.jpg)](https://youtu.be/jH2gr9cPjWI)
+[![Watch the video](https://img.youtube.com/vi/XRJuGTeNVig/maxresdefault.jpg)](https://youtu.be/XRJuGTeNVig)
 
 
 ## Setup Instructions
