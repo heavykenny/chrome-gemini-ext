@@ -1,6 +1,4 @@
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('AI Chat Extension installed');
-
     chrome.contextMenus.create({
         "id": "summarize-selection",
         "title": "Summarize Selection",
@@ -15,12 +13,16 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "summarize-selection") {
         if (info.selectionText) {
-            chrome.sidePanel.open({ tabId: tab.id }).then(() => {
-                chrome.tabs.sendMessage(tab.id, {
-                    action: "summarizeText",
-                    text: info.selectionText
+            chrome.sidePanel.open({ tabId: tab.id })
+                .then(() => {
+                    return new Promise(resolve => setTimeout(resolve, 500)); // Wait for 500ms
+                })
+                .then(() => {
+                    return chrome.runtime.sendMessage({
+                        action: "summarizeText",
+                        text: info.selectionText
+                    });
                 });
-            });
         } else {
             console.error("No text selected");
         }

@@ -4,7 +4,7 @@
   "version": "1.0.2",
   "description": "This extension helps you interact with the Gemini AI (nano) in-built with Chrome. Works offline and is a great tool for productivity",
   "permissions": [
-    "storage", "contextMenus", "sidePanel"
+    "storage", "contextMenus", "sidePanel", "tabs"
   ],
   "background": {
     "service_worker": "background.js"
@@ -15,7 +15,6 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-  "options_page": "options.html",
   "icons": {
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
